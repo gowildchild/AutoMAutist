@@ -122,4 +122,4 @@ Enjoy, Gunther!
 
 **Commercial & Enterprise:** Closed-source integration, corporate deployment, or SaaS monetization without open-sourcing modifications requires a paid **Commercial License**. 
 
-Inquiries: `github.gowildchild.com@xsrv.net` (or open an issue)
+Inquiries: `github.gowildchild@xsrv.net` (or open an issue)
