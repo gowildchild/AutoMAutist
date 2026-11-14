@@ -1,6 +1,8 @@
 Neurodivergent digital assistant, emergency support card, and Home Assistant add-on. This is a project which started as a prototype to check if it would work to use automations to add quality of life for a person with Autism and ADHD. It's already in its running stable for almost 15 years through the use of various programming languages, to finally end up at Python and Home Assistant. 
 
-## Get [AutoMAutist](https://github.com/gowildchild/AutoMAutist/) as stand-alone tool and Home Assistant add-on!
+## Get [AutoMAutist](https://github.com/gowildchild/AutoMAutist/) as stand-alone tool and Home Assistant add-on! 
+
+More images of the prototypes can be viewed at [my blog](https://autiboi.be/2026/11/14/automautist-digital-auti-coach-pre-release/)
 
 * Digital Auti/ADHD-Coach, Assistant and Caretaker.
 * Copyright (c) 2009-2026 Gunther Voet. All Rights Reserved.
