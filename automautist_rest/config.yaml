@@ -1,0 +1,65 @@
+name: "AutoMAutist REST server"
+version: "0.1.11-public"
+slug: "automautist_rest"
+description: "AutoMAutist automated neurodivergent digital assistant, coach and caretaker through REST for HASS.IO"
+maintainer: "Gunther Voet <github.gowildchild@xsrv.net>"
+arch:
+  - aarch64
+  - amd64
+  - armv7
+startup: "application"
+boot: "auto"
+ingress: true
+ingress_port: 19761
+panel_icon: "mdi:server-network"
+map:
+  - type: share
+    read_only: false
+  - type: homeassistant_config
+    read_only: true
+apparmor: false
+init: false
+options:
+  local: true
+  remote: true
+  debug: false
+  staticfiles_storage_backend: "whitenoise.storage.StaticFilesStorage"
+  csrf_trusted_origins:
+    - "http://localhost:19761"
+    - "http://127.0.0.1:19761"
+  trusted_networks:
+    - "192.168.1.0/24"
+    - "172.30.32.0/23"
+  default_scenes:
+    - name: "Decompensate"
+      target_mask: 16
+      action: "dim all"
+  oidc_enabled: false
+  oidc_op_issuer: ""
+  oidc_client_id: ""
+  oidc_client_secret: ""
+  oidc_redirect_url: ""
+
+schema:
+  local: "bool"
+  remote: "bool"
+  debug: "bool"
+  staticfiles_storage_backend: "str"
+  csrf_trusted_origins:
+    - "str"
+  trusted_networks:
+    - "str"
+  default_scenes:
+    - name: "str"
+      target_mask: "int"
+      action: "str"
+  oidc_enabled: "bool"
+  oidc_op_issuer: "str?"
+  oidc_client_id: "str?"
+  oidc_client_secret: "password?"
+  oidc_redirect_url: "str?"
+
+ports:
+  19761/tcp: 19761
+ports_description:
+  19761/tcp: "Direct AutoMAutist Web & M2M REST API Port"

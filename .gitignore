@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+*.sqlite3
+.secrets.env
+storage/
+static/
+rest_audit_*.txt

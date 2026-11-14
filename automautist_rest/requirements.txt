@@ -1,0 +1,5 @@
+Django>=5.0,<6.0
+django-bootstrap5>=26.4
+whitenoise>=6.6.0
+gunicorn>=23.0.0
+# django-hassio-ingress>=1.1.0

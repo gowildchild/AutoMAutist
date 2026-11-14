@@ -1,0 +1,14 @@
+# .dockerignore
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.git
+.gitignore
+*.sqlite3
+build.log
+/share/
+/static/
+.env
+venv/
+env/
