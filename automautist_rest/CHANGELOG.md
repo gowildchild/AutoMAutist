@@ -100,3 +100,7 @@
 ## 0.1.11-public
 
 - First Public Release : Skeleton of how the server is going to look
+
+## 0.1.11-milestone
+
+- The first milestone of porting 4 REST servers into one with all the functions combined.

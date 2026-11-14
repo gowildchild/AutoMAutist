@@ -1,5 +1,5 @@
 name: "AutoMAutist REST server"
-version: "0.1.11-public"
+version: "0.1.11-milestone"
 slug: "automautist_rest"
 description: "AutoMAutist automated neurodivergent digital assistant, coach and caretaker through REST for HASS.IO"
 maintainer: "Gunther Voet <github.gowildchild@xsrv.net>"
