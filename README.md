@@ -2,8 +2,7 @@ This is a project which started as a prototype to check if it would work to use 
 <img width="72" height="72" alt="automautist" align="right" src="https://github.com/user-attachments/assets/bab4c89c-8a11-4716-8d9d-a42f048a8870" /> Neurodivergent digital assistant, emergency support card, and Home Assistant add-on. 
 
 ## Get [AutoMAutist](https://github.com/gowildchild/AutoMAutist/) as stand-alone tool and Home Assistant add-on! 
-
-More images of the prototypes can be viewed at [my blog](https://autiboi.be/2026/11/14/automautist-digital-auti-coach-pre-release/)
+## More images of the prototypes can be viewed at [my blog](https://autiboi.be/2026/11/14/automautist-digital-auti-coach-pre-release/)
 
 * Digital Auti/ADHD-Coach, Assistant and Caretaker.
 * Copyright (c) 2009-2026 Gunther Voet. All Rights Reserved.
@@ -126,7 +125,8 @@ Enjoy, Gunther!
 
 ## ⚖️ Licensing & Commercial Policy
 
-**Community & Caregivers (PolyForm Noncommercial License):** Free to use, self-host, and modify for personal, educational, and non-commercial assistance. Any network/SaaS deployment of *modified* code must publicly share its source under Section 13.
+**Community & Caregivers (PolyForm Noncommercial License):** Free to use, self-host and modify for personal, educational and non-commercial assistance. 
+Any network/SaaS deployment of *modified* code must publicly share its source under Section 13.
 
 **Commercial & Enterprise:** Closed-source integration, corporate deployment, or SaaS monetization without open-sourcing modifications requires a paid **Commercial License**. 
 
