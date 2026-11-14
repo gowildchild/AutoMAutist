@@ -1,0 +1,37 @@
+<nav class="d-flex flex-wrap align-items-center justify-content-between gap-2 bg-dark text-white px-3 py-2 mb-3 rounded shadow-sm">
+  <div class="d-flex align-items-center gap-2">
+    <button type="button" class="btn btn-outline-light btn-sm py-1 px-2" onclick="goBackIngress()" title="Go Back">
+      ⬅️ Back
+    </button>
+    <a class="text-white text-decoration-none fw-bold" href="{% url 'admin-dashboard' %}">
+      🧠 AutoMAutist
+    </a>
+  </div>
+
+  <div class="d-flex flex-wrap align-items-center gap-1">
+    <a href="{% url 'admin-dashboard' %}"
+       class="btn btn-sm py-1 px-2 {% if request.resolver_match.url_name == 'admin-dashboard' %}btn-primary fw-bold{% else %}btn-outline-light{% endif %}">
+      ⚙️ Domotica
+    </a>
+
+    <a href="{% url 'mood-monitor' %}"
+       class="btn btn-sm py-1 px-2 {% if request.resolver_match.url_name == 'mood-monitor' or request.resolver_match.url_name == 'mood-monitor-no-slash' %}btn-primary fw-bold{% else %}btn-outline-light{% endif %}">
+      📊 Clinical Log
+    </a>
+
+    <a href="{% url 'assist-card' %}"
+       class="btn btn-sm py-1 px-2 {% if request.resolver_match.url_name == 'assist-card' or request.resolver_match.url_name == 'assist-card-no-slash' %}btn-danger fw-bold{% else %}btn-outline-danger text-white{% endif %}">
+      🚨 Assist Card
+    </a>
+  </div>
+</nav>
+
+<script>
+  function goBackIngress() {
+    if (window.history.length > 1 && document.referrer && document.referrer.includes(window.location.host)) {
+      window.history.back();
+    } else {
+      window.location.href = "{% url 'admin-dashboard' %}";
+    }
+  }
+</script>

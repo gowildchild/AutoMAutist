@@ -1,0 +1,5 @@
+#!/usr/bin/with-contenv bash
+set -e
+
+echo "[START] Spawning AutoMAutist REST Server Engine..."
+exec /app/run.sh

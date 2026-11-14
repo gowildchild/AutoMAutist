@@ -1,0 +1,12 @@
+# Django volatile runtime artifacts
+*.pyc
+__pycache__/
+staticfiles/
+db.sqlite3
+
+# Local environment test databases
+*.sqlite3
+
+# OS specific hidden tracking files
+.DS_Store
+Thumbs.db
