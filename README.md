@@ -6,8 +6,7 @@ This is a project which started as a prototype to check if it would work to use 
 
 * Digital Auti/ADHD-Coach, Assistant and Caretaker.
 * Copyright (c) 2009-2026 Gunther Voet. All Rights Reserved.
-* This program is free software: you can redistribute/modify it under the terms
-* of the PolyForm Noncommercial License 1.0.0
+* This program is free software: you can redistribute/modify it under the terms of the PolyForm Noncommercial License 1.0.0
 * Closed-source integration, corporate deployment, SaaS monetization licensing rules below the text!
 
 # 1991 - Turbo Pascal - Velleman RS-232 relay cards
