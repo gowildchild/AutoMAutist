@@ -13,9 +13,8 @@
 #               Copyright (c)2009-2026 by Gunther Voet, All Rights Reserved
 ############################################################## #  #   #  *  .
 # Released under strict Non-Commercial Open-Source License Terms.
-
 from django.urls import path
-from core.views import admin_dashboard, mount_new_policy_token
+from core.views import home_dashboard, domotica_dashboard, mount_new_policy_token
 from core.domotica.views import execute_token_auth_endpoint
 from core.mood import views as mood_views
 from core.assist import views as assist_views
@@ -29,6 +28,11 @@ urlpatterns = [
     #path('api/trigger', views.execute_token_auth_endpoint, name='api-token-trigger'),
     path('api/trigger', execute_token_auth_endpoint, name='api-token-trigger'),
     path('api/trigger/', execute_token_auth_endpoint, name='api-token-trigger-slash'),
+
+    path('api/cast/toggle', mood_views.toggle_cast_assist, name='api-cast-toggle'),
+    path('api/cast/toggle/', mood_views.toggle_cast_assist, name='api-cast-toggle-slash'),
+    path('api/mood/tags', mood_views.manage_emotional_tags, name='api-mood-tags'),
+    path('api/mood/tags/', mood_views.manage_emotional_tags, name='api-mood-tags-slash'),
 
     path('api/mood/log', mood_views.ingest_mood_telemetry, name='api-mood-log'),
     path('api/mood/log/', mood_views.ingest_mood_telemetry, name='api-mood-log-slash'),
@@ -44,7 +48,9 @@ urlpatterns = [
     # ==========================================================
     # The primary landing grid console pane (Home Assistant Ingress entry)
     # path('', views.admin_dashboard, name='admin-dashboard'),
-    path('', admin_dashboard, name='admin-dashboard'),
+    path('', home_dashboard, name='admin-dashboard'),
+    path('domotica/', domotica_dashboard, name='domotica-dashboard'),
+    path('domotica', domotica_dashboard, name='domotica-dashboard-no-slash'),
 
     # Form processing target endpoint executing token generation configurations
     #path('device/provision', views.mount_new_policy_token, name='provision-token-device'),

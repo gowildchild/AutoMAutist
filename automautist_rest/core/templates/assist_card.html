@@ -1,220 +1,252 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Emergency Assist Card - {{ title_label }}</title>
-  <link rel="stylesheet" href="{{ ingress_prefix }}/static/bootstrap.min.css">
-  <style>
-    :root { --card-scale: 1; }
-    body { font-size: calc(1.1rem * var(--card-scale)); line-height: 1.55; }
-    .hero-banner { background-color: {{ color_hex }}; color: #fff; padding: 1.75rem; border-radius: 12px; }
-    .card-section { border-left: 6px solid #dc3545; background: #fff; padding: 1.35rem; margin-bottom: 1.25rem; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
-  </style>
-</head>
-<body class="bg-light p-3 p-md-4">
-  <div class="container max-w-4xl mx-auto">
+{% extends 'base.html' %}
+{% block title %}{{ title_label }} — Assist Card | AutoMAutist{% endblock %}
 
-    <!-- SHARED NAVIGATION & ACCESSIBILITY TEXT CONTROLS -->
-    <div class="d-print-none">
-      {% include 'partials/nav_menu.html' %}
-      <div class="d-flex justify-content-end align-items-center gap-1 mb-2">
-        <span class="small text-muted me-1">Text Size:</span>
-        <button type="button" class="btn btn-outline-secondary btn-sm fw-bold" onclick="adjustTextScale(-0.15)" aria-label="Decrease text size">A-</button>
-        <button type="button" class="btn btn-outline-secondary btn-sm fw-bold" onclick="resetTextScale()" aria-label="Reset text size">A</button>
-        <button type="button" class="btn btn-outline-secondary btn-sm fw-bold" onclick="adjustTextScale(0.15)" aria-label="Increase text size">A+</button>
-      </div>
-    </div>
+{% block extra_css %}
+  .assist-sheet {
+    background: #fff;
+    border: 3px solid {{ color_hex }};
+    border-radius: 12px;
+    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    font-size: calc(0.98rem * var(--card-scale));
+    line-height: 1.4;
+  }
+  .assist-top-bar {
+    background-color: {{ color_hex }};
+    color: #fff;
+    padding: 0.65rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .assist-row {
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid #e9ecef;
+  }
+  .assist-row:last-child {
+    border-bottom: none;
+  }
+  .assist-cat-label {
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.3rem;
+    display: block;
+  }
+  .assist-line {
+    padding: 0.18rem 0;
+    border-bottom: 1px dashed #f1f3f5;
+  }
+  .assist-line:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  .assist-warn-row {
+    background-color: #fff5f5;
+    border-left: 5px solid #dc3545;
+  }
+{% endblock %}
 
-    <!-- HEADER HERO -->
-    <div class="hero-banner text-center mb-4" id="assist-hero-banner" style="background-color: {{ color_hex }};">
-      <h1 class="display-5 fw-bold mb-1" id="assist-card-header">{{ ui.card_header|default:"AUTISTIC SUPPORT / EMERGENCY CARD" }}</h1>
-      <h3 class="mb-2" id="assist-state-title">{{ ui.current_state|default:"CURRENT STATE" }}: {{ title_label|upper }}</h3>
-      <p class="mb-0 opacity-75" id="assist-meta">
-        Generated: {{ timestamp_str }} | Device: {{ entity_id }}
-        {% if is_locked %}<span class="badge bg-dark ms-1">🔒 {{ ui.locked_badge|default:"Locked" }}</span>{% endif %}
-      </p>
-      <div class="mt-3 d-inline-flex flex-wrap justify-content-center gap-2 d-print-none">
-        <select id="card-lang-select" class="form-select form-select-lg fw-bold text-dark w-auto" onchange="refreshAssistCard()" aria-label="Select card language">
-          {% for lang in languages %}
-            <option value="{{ lang.code }}" {% if lang.code == active_lang %}selected{% endif %}>
-              🌐 {{ lang.name }}
-            </option>
-          {% endfor %}
-        </select>
+{% block content %}
+  <div class="assist-sheet mb-3" id="assist-sheet-box" style="border-color: {{ color_hex }};">
 
-        <select id="card-mood-select" class="form-select form-select-lg fw-bold text-dark w-auto" onchange="refreshAssistCard()" aria-label="Select mood state">
-          {% for p in profiles %}
-            <option value="{{ p.state_mask }}" {% if p.state_mask == masks.mood_mask %}selected{% endif %}>
-              {{ p.label }}
-            </option>
-          {% endfor %}
-        </select>
-      </div>
-    </div>
-
-    <!-- CRITICAL TRANSIT / CUSTOMS WARNINGS -->
-    <div class="alert alert-danger p-4 mb-4 border-3 border-danger {% if not report.high_priority_warnings %}d-none{% endif %}" id="section-warnings">
-      <h4 class="alert-heading fw-bold mb-3" id="title-warnings">⚠️ {{ ui.warnings_title|default:"CRITICAL OFFICIAL NOTICES (READ FIRST)" }}</h4>
-      <ul class="mb-0" id="list-warnings">
-        {% for warn in report.high_priority_warnings %}
-          <li class="mb-2"><strong>{{ warn }}</strong></li>
-        {% endfor %}
-      </ul>
-    </div>
-
-    <!-- CAREGIVER GROUNDING INSTRUCTIONS -->
-    <div class="card-section" style="border-left-color: #198754;">
-      <h4 class="fw-bold text-success mb-3" id="title-help">🤝 {{ ui.help_title|default:"How to Help Right Now (Do's & Don'ts)" }}</h4>
-      <ul class="mb-0" id="list-caregiver">
-        {% for instr in report.caregiver_instructions %}
-          <li class="mb-2">{{ instr }}</li>
-        {% empty %}
-          <li class="text-muted">{{ ui.default_help|default:"Maintain standard calm, respectful communication." }}</li>
-        {% endfor %}
-      </ul>
-    </div>
-
-    <!-- CURRENT EXECUTIVE & COGNITIVE LIMITATIONS -->
-    <div class="card-section" style="border-left-color: #fd7e14;">
-      <h4 class="fw-bold text-dark mb-3" id="title-cognitive">🧠 {{ ui.cognitive_title|default:"Current Executive & Cognitive Limitations" }}</h4>
-      <ul class="mb-3" id="list-cognitive">
-        {% for limit in report.cognitive_limitations %}
-          <li class="mb-1">{{ limit }}</li>
-        {% empty %}
-          <li class="text-muted">No acute executive limitations flagged.</li>
-        {% endfor %}
-      </ul>
-      <h5 class="fw-bold mt-4 mb-2" id="title-communication">💬 Communication Profile</h5>
-      <ul class="mb-0" id="list-communication">
-        {% for comm in report.communication_profile %}
-          <li class="mb-1">{{ comm }}</li>
-        {% empty %}
-          <li class="text-muted">{{ ui.default_comm|default:"Standard verbal and written communication active." }}</li>
-        {% endfor %}
-      </ul>
-    </div>
-
-    <!-- SOMATIC STIMMING & SAFETY -->
-    <div class="card-section {% if not report.active_stimming_behaviors %}d-none{% endif %}" id="section-stimming" style="border-left-color: #0d6efd;">
-      <h4 class="fw-bold text-primary mb-3" id="title-sensory">🔄 {{ ui.sensory_title|default:"Active Somatic Stimming" }}</h4>
-      <ul class="mb-0" id="list-stimming">
-        {% for stim in report.active_stimming_behaviors %}
-          <li class="mb-1">{{ stim }}</li>
-        {% endfor %}
-      </ul>
-    </div>
-
-    <!-- ACTION BUTTONS -->
-    <div class="d-flex flex-wrap justify-content-center gap-2 mt-4 mb-3 d-print-none">
-      {% if not is_locked %}
-        <a href="{% url 'assist-card-export' %}" class="btn btn-outline-primary btn-lg px-3">⬇ {{ ui.export_btn|default:"Export JSON" }}</a>
+    <!-- 1. COMPACT MOOD STATE HEADER -->
+    <div class="assist-top-bar" id="assist-hero-banner" style="background-color: {{ color_hex }};">
+      <span class="fw-bold fs-5" id="assist-state-title">
+        {{ title_label|upper }} — ASSIST CARD
+      </span>
+      {% if is_locked %}
+        <span class="badge bg-dark">🔒 {{ ui.locked_badge|default:"Locked" }}</span>
       {% endif %}
-      <button type="button" onclick="copyShareableCardUrl()" class="btn btn-outline-dark btn-lg px-3" id="copy-url-btn">🔗 Copy Card URL</button>
-      <button type="button" onclick="window.print()" class="btn btn-dark btn-lg px-4">🖨️ {{ ui.print_btn|default:"Print Physical Card / Save PDF" }}</button>
+    </div>
+    <!-- 2. CRITICAL WARNINGS (Shown only when active) -->
+    <div class="assist-row assist-warn-row {% if not report.high_priority_warnings %}d-none{% endif %}" id="section-warnings">
+      <span class="assist-cat-label text-danger" id="title-warnings">
+        ⚠️ {{ ui.warnings_title|default:"Critical Notice" }}
+      </span>
+      <div id="list-warnings">
+        {% for warn in report.high_priority_warnings %}
+          <div class="assist-line fw-bold text-danger">{{ warn }}</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- 3. HOW TO HELP -->
+    <div class="assist-row">
+      <span class="assist-cat-label text-success" id="title-help">
+        🤝 {{ ui.help_title|default:"How to Help" }}
+      </span>
+      <div id="list-caregiver">
+        {% for instr in report.caregiver_instructions %}
+          <div class="assist-line">{{ instr }}</div>
+        {% empty %}
+          <div class="assist-line text-muted">{{ ui.default_help|default:"Calm, plain, respectful communication." }}</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- 4. COGNITIVE & EXECUTIVE -->
+    <div class="assist-row">
+      <span class="assist-cat-label text-warning" style="color: #b45309 !important;" id="title-cognitive">
+        🧠 {{ ui.cognitive_title|default:"Cognitive & Focus" }}
+      </span>
+      <div id="list-cognitive">
+        {% for limit in report.cognitive_limitations %}
+          <div class="assist-line">{{ limit }}</div>
+        {% empty %}
+          <div class="assist-line text-muted">No acute executive limitations flagged.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- 5. COMMUNICATION -->
+    <div class="assist-row">
+      <span class="assist-cat-label text-dark" id="title-communication">
+        💬 Communication
+      </span>
+      <div id="list-communication">
+        {% for comm in report.communication_profile %}
+          <div class="assist-line">{{ comm }}</div>
+        {% empty %}
+          <div class="assist-line text-muted">{{ ui.default_comm|default:"Standard communication active." }}</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- 6. SENSORY & STIMMING (Shown only when active) -->
+    <div class="assist-row {% if not report.active_stimming_behaviors %}d-none{% endif %}" id="section-stimming">
+      <span class="assist-cat-label text-primary" id="title-sensory">
+        🔄 {{ ui.sensory_title|default:"Sensory & Stimming" }}
+      </span>
+      <div id="list-stimming">
+        {% for stim in report.active_stimming_behaviors %}
+          <div class="assist-line">{{ stim }}</div>
+        {% endfor %}
+      </div>
     </div>
 
   </div>
 
-  <script>
-    const SHARE_TOKEN = "{{ share_token|escapejs }}";
-    let currentScale = parseFloat(localStorage.getItem('automautist_card_scale') || '1');
+  <!-- BOTTOM UTILITY BAR -->
+  <div class="d-flex flex-wrap justify-content-center align-items-center gap-2 d-print-none">
+    <select id="card-lang-select" class="form-select form-select-sm fw-bold w-auto" onchange="refreshAssistCard()" aria-label="Language">
+      {% for lang in languages %}
+        <option value="{{ lang.code }}" {% if lang.code == active_lang %}selected{% endif %}>🌐 {{ lang.name }}</option>
+      {% endfor %}
+    </select>
 
-    function applyTextScale() {
-      document.documentElement.style.setProperty('--card-scale', currentScale.toFixed(2));
-      localStorage.setItem('automautist_card_scale', currentScale.toFixed(2));
+    <select id="card-mood-select" class="form-select form-select-sm fw-bold w-auto" onchange="refreshAssistCard()" aria-label="State">
+      {% for p in profiles %}
+        <option value="{{ p.state_mask }}" {% if p.state_mask == masks.mood_mask %}selected{% endif %}>{{ p.label }}</option>
+      {% endfor %}
+    </select>
+
+    <div class="btn-group btn-group-sm" role="group">
+      <button type="button" class="btn btn-outline-secondary fw-bold" onclick="adjustTextScale(-0.15)">A-</button>
+      <button type="button" class="btn btn-outline-secondary fw-bold" onclick="resetTextScale()">A</button>
+      <button type="button" class="btn btn-outline-secondary fw-bold" onclick="adjustTextScale(0.15)">A+</button>
+    </div>
+
+    {% if not is_locked %}
+      <a href="{% url 'assist-card-export' %}" class="btn btn-outline-primary btn-sm">⬇ JSON</a>
+    {% endif %}
+    <button type="button" onclick="copyShareableCardUrl()" class="btn btn-outline-dark btn-sm" id="copy-url-btn">🔗 URL</button>
+    <button type="button" onclick="window.print()" class="btn btn-dark btn-sm">🖨️ Print</button>
+  </div>
+{% endblock %}
+{% block extra_js %}
+<script>
+  const SHARE_TOKEN = "{{ share_token|escapejs }}";
+  let currentScale = parseFloat(localStorage.getItem('automautist_card_scale') || '1');
+
+  function applyTextScale() {
+    document.documentElement.style.setProperty('--card-scale', currentScale.toFixed(2));
+    localStorage.setItem('automautist_card_scale', currentScale.toFixed(2));
+  }
+  function adjustTextScale(delta) { currentScale = Math.min(1.8, Math.max(0.85, currentScale + delta)); applyTextScale(); }
+  function resetTextScale() { currentScale = 1; applyTextScale(); }
+
+  function renderLines(elId, items, emptyText, boldDanger = false) {
+    const box = document.getElementById(elId);
+    if (!box) return;
+    if (!items || items.length === 0) {
+      box.innerHTML = emptyText ? `<div class="assist-line text-muted">${emptyText}</div>` : '';
+      return;
     }
+    box.innerHTML = items.map(item =>
+      boldDanger
+        ? `<div class="assist-line fw-bold text-danger">${item}</div>`
+        : `<div class="assist-line">${item}</div>`
+    ).join('');
+  }
 
-    function adjustTextScale(delta) {
-      currentScale = Math.min(1.8, Math.max(0.85, currentScale + delta));
-      applyTextScale();
-    }
+  function refreshAssistCard() {
+    const mask = document.getElementById('card-mood-select')?.value;
+    const lang = document.getElementById('card-lang-select')?.value;
+    const url = new URL(window.location.href);
+    if (mask) url.searchParams.set('mood_mask', mask);
+    if (lang) url.searchParams.set('lang', lang);
+    url.searchParams.set('format', 'json');
 
-    function resetTextScale() {
-      currentScale = 1;
-      applyTextScale();
-    }
+    fetch(url.toString())
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('assist-hero-banner').style.backgroundColor = data.color_hex;
+        document.getElementById('assist-sheet-box').style.borderColor = data.color_hex;
+        document.documentElement.style.setProperty('--state-color', data.color_hex);
+        document.getElementById('assist-state-title').textContent = `${data.title_label.toUpperCase()} — ASSIST CARD`;
 
-    function renderList(elId, items, emptyText, boldItems = false) {
-      const ul = document.getElementById(elId);
-      if (!ul) return;
-      if (!items || items.length === 0) {
-        ul.innerHTML = emptyText ? `<li class="text-muted">${emptyText}</li>` : '';
-        return;
-      }
-      ul.innerHTML = items.map(item =>
-        boldItems ? `<li class="mb-2"><strong>${item}</strong></li>` : `<li class="mb-1">${item}</li>`
-      ).join('');
-    }
+        const moodSel = document.getElementById('card-mood-select');
+        if (moodSel && data.mood_options) {
+          const currentVal = moodSel.value;
+          moodSel.innerHTML = data.mood_options.map(opt =>
+            `<option value="${opt.state_mask}" ${String(opt.state_mask) === String(currentVal) ? 'selected' : ''}>${opt.label}</option>`
+          ).join('');
+        }
 
-    function refreshAssistCard() {
-      const mask = document.getElementById('card-mood-select')?.value;
-      const lang = document.getElementById('card-lang-select')?.value;
-      const url = new URL(window.location.href);
+        const setElText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+        setElText('title-warnings', '⚠️ ' + data.ui.warnings_title);
+        setElText('title-help', '🤝 ' + data.ui.help_title);
+        setElText('title-cognitive', '🧠 ' + data.ui.cognitive_title);
+        setElText('title-sensory', '🔄 ' + data.ui.sensory_title);
 
-      if (mask) url.searchParams.set('mood_mask', mask);
-      if (lang) url.searchParams.set('lang', lang);
-      url.searchParams.set('format', 'json');
+        const r = data.report || {};
+        const warnBox = document.getElementById('section-warnings');
+        if (r.high_priority_warnings && r.high_priority_warnings.length > 0) {
+          warnBox.classList.remove('d-none');
+          renderLines('list-warnings', r.high_priority_warnings, '', true);
+        } else {
+          warnBox.classList.add('d-none');
+        }
 
-      fetch(url.toString())
-        .then(res => res.json())
-        .then(data => {
-          document.getElementById('assist-hero-banner').style.backgroundColor = data.color_hex;
-          document.getElementById('assist-card-header').textContent = data.ui.card_header;
-          document.getElementById('assist-state-title').textContent = `${data.ui.current_state}: ${data.title_label.toUpperCase()}`;
+        renderLines('list-caregiver', r.caregiver_instructions, data.ui.default_help);
+        renderLines('list-cognitive', r.cognitive_limitations, 'No acute executive limitations flagged.');
+        renderLines('list-communication', r.communication_profile, data.ui.default_comm);
 
-          const moodSel = document.getElementById('card-mood-select');
-          if (moodSel && data.mood_options) {
-            const currentVal = moodSel.value;
-            moodSel.innerHTML = data.mood_options.map(opt =>
-              `<option value="${opt.state_mask}" ${String(opt.state_mask) === String(currentVal) ? 'selected' : ''}>${opt.label}</option>`
-            ).join('');
-          }
-
-          const setElText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
-          setElText('title-warnings', '⚠️ ' + data.ui.warnings_title);
-          setElText('title-help', '🤝 ' + data.ui.help_title);
-          setElText('title-cognitive', '🧠 ' + data.ui.cognitive_title);
-          setElText('title-sensory', '🔄 ' + data.ui.sensory_title);
-
-          const r = data.report || {};
-          const warnBox = document.getElementById('section-warnings');
-          if (r.high_priority_warnings && r.high_priority_warnings.length > 0) {
-            warnBox.classList.remove('d-none');
-            renderList('list-warnings', r.high_priority_warnings, '', true);
-          } else {
-            warnBox.classList.add('d-none');
-          }
-
-          renderList('list-caregiver', r.caregiver_instructions, data.ui.default_help);
-          renderList('list-cognitive', r.cognitive_limitations, 'No acute executive limitations flagged.');
-          renderList('list-communication', r.communication_profile, data.ui.default_comm);
-
-          const stimBox = document.getElementById('section-stimming');
-          if (r.active_stimming_behaviors && r.active_stimming_behaviors.length > 0) {
-            stimBox.classList.remove('d-none');
-            renderList('list-stimming', r.active_stimming_behaviors, '');
-          } else {
-            stimBox.classList.add('d-none');
-          }
-        });
-    }
-
-    function copyShareableCardUrl() {
-      const url = new URL(window.location.href);
-      url.searchParams.delete('format');
-      if (SHARE_TOKEN) url.searchParams.set('token', SHARE_TOKEN);
-      navigator.clipboard.writeText(url.toString()).then(() => {
-        const btn = document.getElementById('copy-url-btn');
-        if (btn) {
-          btn.textContent = '✅ Link Copied!';
-          setTimeout(() => { btn.textContent = '🔗 Copy Card URL'; }, 2000);
+        const stimBox = document.getElementById('section-stimming');
+        if (r.active_stimming_behaviors && r.active_stimming_behaviors.length > 0) {
+          stimBox.classList.remove('d-none');
+          renderLines('list-stimming', r.active_stimming_behaviors, '');
+        } else {
+          stimBox.classList.add('d-none');
         }
       });
-    }
+  }
 
-    document.addEventListener('DOMContentLoaded', applyTextScale);
-  </script>
-</body>
-</html>
+  function copyShareableCardUrl() {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('format');
+    if (SHARE_TOKEN) url.searchParams.set('token', SHARE_TOKEN);
+    navigator.clipboard.writeText(url.toString()).then(() => {
+      const btn = document.getElementById('copy-url-btn');
+      if (btn) {
+        btn.textContent = '✅ Copied';
+        setTimeout(() => { btn.textContent = '🔗 URL'; }, 2000);
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', applyTextScale);
+</script>
+{% endblock %}

@@ -72,6 +72,8 @@ class MoodLogEntry(models.Model):
     ui_color_hex = models.CharField(max_length=7, default="#198754")
     reason_summary = models.TextField(blank=True, default="", help_text="Triggers/circumstances (crowds, fatigue, etc.)")
     clinician_notes = models.TextField(blank=True, default="")
+    emotional_mood = models.CharField(max_length=60, blank=True, default="")
+    is_active = models.BooleanField(default=True, db_index=True)
 
     class Meta:
         verbose_name = "Clinical Mood Telemetry Log"
@@ -82,3 +84,32 @@ class MoodLogEntry(models.Model):
 
     def __str__(self):
         return f"[{self.timestamp.strftime('%Y-%m-%d %H:%M')}] {self.entity_id} - {self.mood_label}"
+
+class EmotionalMoodTag(models.Model):
+    """User-customizable everyday emotional moods (Happy, Sad, Tired, etc.)."""
+    name = models.CharField(max_length=50, unique=True)
+    emoji = models.CharField(max_length=10, blank=True, default="🙂")
+    is_default = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.emoji} {self.name}".strip()
+
+
+class SystemControlState(models.Model):
+    """Stores live active state (including unlogged updates) and temporary Cast Assist switch."""
+    entity_id = models.CharField(max_length=150, unique=True, default="user.primary")
+    active_profile_key = models.CharField(max_length=50, default="audhd")
+    active_mood_mask = models.BigIntegerField(default=1)
+    active_mood_label = models.CharField(max_length=50, default="Fine")
+    active_color_hex = models.CharField(max_length=7, default="#198754")
+    active_emotional_mood = models.CharField(max_length=60, blank=True, default="")
+    active_reason = models.TextField(blank=True, default="")
+    cast_assist_enabled = models.BooleanField(default=False)
+    domotica_enabled = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.entity_id}: {self.active_mood_label} (Cast={self.cast_assist_enabled})"

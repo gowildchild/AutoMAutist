@@ -104,3 +104,45 @@
 ## 0.1.11-milestone
 
 - The first milestone of porting 4 REST servers into one with all the functions combined.
+
+## 0.1.12-meds
+
+- Removed Domotica from main dashboard till it is mature enough
+- Adding Meds
+- Adding mental and emotional mood
+
+## 0.1.12-moods
+
+- Fixed runscript to support STANDALONE, HA-PROD and HA-DEV
+- Automatic migration only when there is a version change or when in development mode
+- More information that matters for the logs
+
+## 0.1.12-declutter
+
+- Decluttering dashboard
+- Add Moodymeter with add and delete
+- Added mood logging options
+
+## 0.1.12-dashboard
+
+- Main dashboard and other dashboards split now
+
+## 0.1.12-migrations
+
+- fixed migrations issues
+
+## 0.1.13-alpha
+
+- Time for the estethical and ergonomical aspect
+
+## 0.1.13-ui
+
+- UI Unification between all the pages
+
+## 0.1.14-ui
+
+- UI of cards is more compact now
+
+## 0.1.14-milestone
+
+- Milestone 2 has the assist cards finished, mood selection and registration

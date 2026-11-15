@@ -1,19 +1,45 @@
 #!/usr/bin/env bash
 set -e
 
-# 1. Standalone vs Home Assistant OS Path Detection
-if [ -d "/share" ]; then
+BOOT_DATE=$(date '+%Y-%m-%d %H:%M:%S %Z')
+ADDON_VERSION="standalone"
+ADDON_SLUG="standalone"
+RUNTIME_MODE="STANDALONE"
+INGRESS_PORT="19761"
+HOST_PORT="${PORT:-19761}"
+
+if [ -f "/data/options.json" ] || [ -n "${SUPERVISOR_TOKEN:-}" ]; then
     DB_DIR="/share/automautist_db"
     SECRET_STORE="/share/automautist_db/.secrets.env"
     OPTIONS_FILE="/data/options.json"
-    echo "[AutoMAutist:ENV] Mode: Home Assistant Add-on detected (/share active)."
+
+    if [ -n "${SUPERVISOR_TOKEN:-}" ] && command -v curl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+        SELF_INFO=$(curl -s -H "Authorization: Bearer ${SUPERVISOR_TOKEN}" http://supervisor/addons/self/info 2>/dev/null || true)
+        if [ -n "$SELF_INFO" ]; then
+            ADDON_VERSION=$(echo "$SELF_INFO" | jq -r '.data.version // "unknown"')
+            ADDON_SLUG=$(echo "$SELF_INFO" | jq -r '.data.slug // "unknown"')
+            INGRESS_PORT=$(echo "$SELF_INFO" | jq -r '.data.ingress_port // 19761')
+            MAPPED_PORT=$(echo "$SELF_INFO" | jq -r '.data.network["19761/tcp"] // empty')
+            [ -n "$MAPPED_PORT" ] && HOST_PORT="$MAPPED_PORT"
+        fi
+    fi
+
+    if [[ "$ADDON_SLUG" == local_* ]]; then
+        RUNTIME_MODE="HA-DEV"
+    else
+        RUNTIME_MODE="HA-PROD"
+    fi
 else
     DB_DIR="/app/storage"
     SECRET_STORE="/app/storage/.secrets.env"
     OPTIONS_FILE=""
-    echo "[AutoMAutist:ENV] Mode: Standalone Server detected (/app/storage active)."
+    RUNTIME_MODE="STANDALONE"
 fi
 
+export AUTOMAUTIST_RUNTIME_MODE="$RUNTIME_MODE"
+export AUTOMAUTIST_VERSION="$ADDON_VERSION"
+export AUTOMAUTIST_ADDON_SLUG="$ADDON_SLUG"
+echo "[AutoMAutist ${RUNTIME_MODE}] ${ADDON_SLUG} v${ADDON_VERSION} (${DB_DIR} active)"
 echo "[AutoMAutist:INIT] System Database Engine..."
 mkdir -p "$DB_DIR"
 export DATABASE_PATH="${DB_DIR}/db.sqlite3"
@@ -93,13 +119,23 @@ export OIDC_CLIENT_ID="$EXPORT_OIDC_CLIENT_ID"
 export OIDC_CLIENT_SECRET="$EXPORT_OIDC_CLIENT_SECRET"
 export OIDC_REDIRECT_URL="$EXPORT_OIDC_REDIRECT_URL"
 
-echo "[AutoMAutist:DB:SETUP] Database table sync migrations..."
+VERSION_STAMP="${DB_DIR}/.last_migrated_version"
+LAST_VER=$(cat "$VERSION_STAMP" 2>/dev/null || echo "")
+
+if [ "$RUNTIME_MODE" = "HA-DEV" ] || [ "$ADDON_VERSION" != "$LAST_VER" ]; then
+    echo "[AutoMAutist:DB] Make Migrations Database v${LAST_VER:-none} -> v${ADDON_VERSION} - ${RUNTIME_MODE}.."
+    python3 /app/manage.py makemigrations core domotica assist mood --noinput
+    echo "$ADDON_VERSION" > "$VERSION_STAMP"
+fi
+
+echo "[AutoMAutist:DB] Migrating Django Database"
 python3 /app/manage.py migrate --noinput
 
-echo "=================================================================="
-echo " AutoMAutist REST Server | Copyright (c) 2009-2026 Gunther Voet"
+echo "[AutoMAutist:TIME] ${BOOT_DATE}"
+echo "============================================================================"
+echo " AutoMAutist REST v${ADDON_VERSION} | Copyright (c) 2009-2026 Gunther Voet"
 echo " License: PolyForm Noncommercial 1.0.0 (Non-Commercial Use Only)"
 echo " Source:  https://github.com/gowildchild/AutoMAutist"
-echo "=================================================================="
-echo "[AutoMAutist:RUN] Running Web Application on Port 19761..."
-exec gunicorn core.wsgi:application --chdir /app --bind 0.0.0.0:19761 --workers 2 --threads 2 --timeout 60 --preload
+echo "============================================================================"
+echo "[AutoMAutist:RUN] Running Web Application on Port ${INGRESS_PORT} | Host Port ${HOST_PORT}"
+exec gunicorn core.wsgi:application --chdir /app --bind "0.0.0.0:${INGRESS_PORT}" --workers 2 --threads 2 --timeout 60 --preload

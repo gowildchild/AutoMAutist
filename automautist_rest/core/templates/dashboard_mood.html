@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}Mood Diary | AutoMAutist{% endblock %}
+
+{% block content %}
+  <!-- CURRENT MOOD HERO -->
+  {% if current_entry %}
+  <div class="card shadow-sm mb-3 border-start border-5" style="border-left-color: {{ current_entry.ui_color_hex }} !important;">
+    <div class="card-body py-3">
+      <span class="badge float-end fs-6" style="background-color: {{ current_entry.ui_color_hex }};">
+        {{ current_entry.mood_label }}
+      </span>
+      <h5 class="card-title mb-1">Current State: {{ current_entry.mood_label }}</h5>
+      <p class="text-muted small mb-1">Recorded: {{ current_entry.timestamp }}</p>
+      <p class="mb-2 small"><strong>Context:</strong> {{ current_entry.reason_summary|default:"No specific trigger noted." }}</p>
+      {% if current_assist %}
+        <div class="alert alert-secondary py-2 px-3 mt-2 mb-0 small">
+          <strong>{{ current_assist.status_title }}</strong>
+          <ul class="mb-0 mt-1 ps-3">
+            {% for limit in current_assist.cognitive_limitations %}<li>{{ limit }}</li>{% endfor %}
+            {% for comm in current_assist.communication_profile %}<li>{{ comm }}</li>{% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- LAST 10 MOODS TIMELINE -->
+  <div class="card shadow-sm mb-3">
+    <div class="card-header bg-white py-2">
+      <h6 class="mb-0 fw-bold">⏱️ Last 10 Recorded Mood Shifts</h6>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle small">
+        <thead class="table-light">
+          <tr>
+            <th>Timestamp</th>
+            <th>State</th>
+            <th>Duration</th>
+            <th>Trigger / Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in last_10 %}
+          <tr>
+            <td class="text-nowrap"><code>{{ item.timestamp_short }}</code></td>
+            <td>
+              <span class="badge" style="background-color: {{ item.color_hex }}; font-size: 0.82rem;">
+                {{ item.mood_label }}
+              </span>
+              {% if item.emotional_mood %}
+                <span class="badge bg-light text-dark border">{{ item.emotional_mood }}</span>
+              {% endif %}
+            </td>
+            <td class="text-nowrap fw-semibold text-muted">{{ item.duration }}</td>
+            <td>{{ item.reason_summary|default:"-"|truncatechars:70 }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="text-center text-muted py-3">No historical entries recorded yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- FULL CLINICIAN AUDIT TABLE -->
+  <div class="card shadow-sm">
+    <div class="card-header bg-dark text-white py-2 d-flex justify-content-between align-items-center">
+      <h6 class="mb-0 fw-bold">📋 Complete Historical Archive (Clinician Export)</h6>
+      <button onclick="window.print()" class="btn btn-sm btn-light py-0 px-2">🖨️ Print / PDF</button>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-striped mb-0 align-middle small">
+        <thead>
+          <tr>
+            <th>Date / Time</th>
+            <th>State</th>
+            <th>Context / Reason</th>
+            <th>Clinician Notes</th>
+            <th>Duration</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in page_obj %}
+          <tr>
+            <td class="text-nowrap">{{ entry.timestamp_short }}</td>
+            <td>
+              <span class="badge" style="background-color: {{ entry.color_hex }};">{{ entry.mood_label }}</span>
+              {% if entry.emotional_mood %}
+                <span class="badge bg-light text-dark border">{{ entry.emotional_mood }}</span>
+              {% endif %}
+            </td>
+            <td>{{ entry.reason_summary|default:"-" }}</td>
+            <td>{{ entry.clinician_notes|default:"-" }}</td>
+            <td class="text-nowrap fw-semibold text-muted">{{ entry.duration }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

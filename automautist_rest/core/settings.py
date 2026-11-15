@@ -67,6 +67,9 @@ ENCRYPTION_SALT = (
 )
 DEBUG = bool(CUSTOM_CONF.get('debug', os.environ.get('SUPERVISOR_DEBUG', 'False') == 'True'))
 
+RUNTIME_MODE = os.environ.get('AUTOMAUTIST_RUNTIME_MODE', 'STANDALONE')
+APP_VERSION = os.environ.get('AUTOMAUTIST_VERSION', '0.1.12-dashboard')
+
 # Allow Django to accept requests forwarded via Home Assistant Ingress & direct LAN IP
 ALLOWED_HOSTS = CUSTOM_CONF.get('allowed_hosts', ['*'])
 

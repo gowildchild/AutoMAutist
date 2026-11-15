@@ -23,10 +23,13 @@ from django.conf import settings
 from django.urls import set_script_prefix
 from core.domotica.models import TokenProtectedDevice
 from core.domotica.flags import room_location
-from core.mood.models import MentalStateProfile, MoodLogEntry
+from core.mood.models import (
+    MentalStateProfile,
+    MoodLogEntry,
+    EmotionalMoodTag,
+    SystemControlState,
+)
 from core.assist.engine import compile_auticoach_profile
-
-
 import re
 
 INGRESS_PREFIX_RE = re.compile(r'^(/api/hassio_ingress/[^/]+)')
@@ -54,17 +57,53 @@ class HomeAssistantIngressMiddleware(MiddlewareMixin):
             set_script_prefix('/')
         return None
 
-
 def ingress_context(request):
-    return {'ingress_prefix': getattr(request, 'ingress_prefix', '')}
+    ctrl = SystemControlState.objects.filter(entity_id='user.primary').first()
+    return {
+        'ingress_prefix': getattr(request, 'ingress_prefix', ''),
+        'runtime_mode': getattr(settings, 'RUNTIME_MODE', 'STANDALONE'),
+        'app_version': getattr(settings, 'APP_VERSION', '0.1.12-dashboard'),
+        'active_state_color': ctrl.active_color_hex if ctrl else '#198754',
+        'active_state_label': ctrl.active_mood_label if ctrl else 'Fine',
+    }
 
-def admin_dashboard(request):
+def home_dashboard(request):
+    """Primary '/' Home Dashboard: Navigation tiles + immediate mood & diary controls."""
+    profiles = MentalStateProfile.objects.all().order_by('state_mask')
+    emotional_tags = EmotionalMoodTag.objects.all().order_by('name')
+    ctrl, _ = SystemControlState.objects.get_or_create(entity_id='user.primary')
+    latest_logged = MoodLogEntry.objects.filter(entity_id='user.primary', is_active=True).first()
+
+    active_mask = ctrl.active_mood_mask or (latest_logged.mood_mask if latest_logged else 1)
+    active_profile = profiles.filter(state_mask=active_mask).first() or profiles.first()
+
+    profiles_json = json.dumps({
+        str(p.state_mask): {
+            "label": p.label,
+            "color": p.ui_color_hex,
+            "description": p.description,
+        }
+        for p in profiles
+    })
+
+    return render(request, 'dashboard.html', {
+        'profiles': profiles,
+        'emotional_tags': emotional_tags,
+        'ctrl': ctrl,
+        'active_mask': active_mask,
+        'active_profile': active_profile,
+        'latest_logged': latest_logged,
+        'profiles_json': profiles_json,
+    })
+
+def domotica_dashboard(request):
     devices = TokenProtectedDevice.objects.all()
     profiles = MentalStateProfile.objects.all().order_by('state_mask')
-    latest_mood = MoodLogEntry.objects.filter(entity_id='user.primary').first()
+    ctrl, _ = SystemControlState.objects.get_or_create(entity_id='user.primary')
 
     # Determine active mood mask (defaults to Fine = 1)
-    active_mask = latest_mood.mood_mask if latest_mood else 1
+    active_mask = ctrl.active_mood_mask or 1
+    # active_mask = latest_mood.mood_mask if latest_mood else 1
     active_profile = profiles.filter(state_mask=active_mask).first() or profiles.first()
 
     # Build JSON map of all mood presets for instant client-side previewing
@@ -85,13 +124,12 @@ def admin_dashboard(request):
         if "NOW" in r.name and "UNKNOWN" not in r.name and "TIME" not in r.name and "RESERVED" not in r.name
     ]
 
-    return render(request, 'dashboard.html', {
+    return render(request, 'dashboard_domotica.html', {
         'devices': devices,
         'active_devices_count': devices.filter(is_active=True).count(),
         'profiles': profiles,
         'active_mask': active_mask,
         'active_profile': active_profile,
-        'latest_mood': latest_mood,
         'profiles_json': profiles_json,
         'policy_choices': policy_choices,
         'room_choices': room_choices,
@@ -114,13 +152,13 @@ def mount_new_policy_token(request):
             room_mask = int(request.POST.get('room_now_mask') or 0)
         except ValueError:
             messages.error(request, "Numeric fields (calls, days, or room mask) must be valid integers.")
-            return redirect('admin-dashboard')
+            return redirect('domotica-dashboard')
 
         try:
             ipaddress.ip_network(subnet, strict=False)
         except ValueError:
             messages.error(request, f"Invalid CIDR subnet format: '{subnet}'. Example: 192.168.1.0/24")
-            return redirect('admin-dashboard')
+            return redirect('domotica-dashboard')
 
         if entity:
             device, _ = TokenProtectedDevice.objects.update_or_create(
@@ -139,4 +177,4 @@ def mount_new_policy_token(request):
         else:
             messages.warning(request, "Entity ID is required to provision a device token.")
 
-    return redirect('admin-dashboard')
+    return redirect('domotica-dashboard')

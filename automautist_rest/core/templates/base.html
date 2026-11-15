@@ -1,0 +1,50 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>{% block title %}AutoMAutist{% endblock %}</title>
+  <link rel="stylesheet" href="{{ ingress_prefix }}/static/bootstrap.min.css">
+  <style>
+    :root {
+      --state-color: {{ active_state_color|default:'#198754' }};
+      --card-scale: 1;
+    }
+    html, body {
+      min-height: 100vh;
+      margin: 0;
+      background-color: color-mix(in srgb, var(--state-color) 10%, #f8f9fa);
+      border-top: 5px solid var(--state-color);
+      touch-action: manipulation;
+    }
+    .state-navbar {
+      background-color: var(--state-color) !important;
+      transition: background-color 0.2s ease;
+    }
+    .app-shell {
+      width: 100%;
+      max-width: 1140px;
+      margin: 0 auto;
+    }
+    {% block extra_css %}{% endblock %}
+  </style>
+</head>
+<body class="py-2 px-2 px-md-3">
+  <div class="app-shell">
+    <div class="d-print-none">
+      {% include 'partials/nav_menu.html' %}
+    </div>
+
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="text-center text-muted mt-4 mb-2 d-print-none" style="font-size: 0.72rem;">
+      AutoMAutist <span class="font-monospace">{{ runtime_mode }} v{{ app_version }}</span>
+    </footer>
+  </div>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

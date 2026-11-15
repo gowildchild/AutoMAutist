@@ -7,7 +7,7 @@
 ## /  Y88b 88  88 888  8888   | / Y88Y Y888b/  Y8b  88  88 88   88 Y8b   88 *
 # /____Y88b88  88 888  Y888   '/   YY   Y8b/____Y8b 88  88 88   88  88D  88 .
 #/      Y88"8_-88 "88_/ "88_-~/      *   Y/8b    \Yb"8_-88 "8_/ 8\_8P   "8_/
-#        \        +          /           /       
+#        \        +          /           /
 #
 #        +                       https://github.com/gowildchild/AutoMAutist
 #               Copyright (c)2009-2026 by Gunther Voet, All Rights Reserved
@@ -18,7 +18,7 @@ from django.apps import AppConfig
 from django.db.models.signals import post_migrate
 def seed_auti_coach_presets(sender, **kwargs):
     """
-    Natively pre-fills Gunther's historical 15-year Auti-Coach regulation profiles 
+    Natively pre-fills historical 15-year Auti-Coach regulation profiles 
     on the very first database compilation step automatically.
     """
     # Local imports inside the signal execution block to prevent early application boot loops
@@ -128,6 +128,42 @@ def seed_auti_coach_presets(sender, **kwargs):
                 "environmental_overrides": item["overrides"]
             }
         )
+
+    from django.db import connection
+    from django.db.utils import OperationalError
+    from core.mood.models import MoodLogEntry, EmotionalMoodTag, SystemControlState
+
+    existing_tables = connection.introspection.table_names()
+    with connection.schema_editor() as schema_editor:
+        for model_cls in (EmotionalMoodTag, SystemControlState):
+            if model_cls._meta.db_table not in existing_tables:
+                schema_editor.create_model(model_cls)
+
+        # Ensure new columns on MoodLogEntry exist in existing SQLite DBs
+        mood_cols = {
+            col.name for col in connection.introspection.get_table_description(
+                connection.cursor(), MoodLogEntry._meta.db_table
+            )
+        }
+        for field_name in ("emotional_mood", "is_active"):
+            if field_name not in mood_cols:
+                schema_editor.add_field(MoodLogEntry, MoodLogEntry._meta.get_field(field_name))
+
+    try:
+        default_emotions = [
+            ("Happy", "😊"), ("Calm", "😌"), ("Content", "🙂"), ("Grateful", "🙏"),
+            ("Sad", "😢"), ("Tired", "😴"), ("Frustrated", "😤"), ("Anxious", "😰"),
+            ("Overwhelmed", "😵"), ("Lonely", "😔"), ("Energetic", "⚡"), ("Neutral", "😐"),
+        ]
+        for emo_name, emo_icon in default_emotions:
+            EmotionalMoodTag.objects.get_or_create(
+                name=emo_name,
+                defaults={"emoji": emo_icon, "is_default": True},
+            )
+        SystemControlState.objects.get_or_create(entity_id="user.primary")
+    except OperationalError:
+        pass
+
 
 class MoodConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'

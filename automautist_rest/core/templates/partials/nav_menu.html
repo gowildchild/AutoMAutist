@@ -1,37 +1,33 @@
-<nav class="d-flex flex-wrap align-items-center justify-content-between gap-2 bg-dark text-white px-3 py-2 mb-3 rounded shadow-sm">
-  <div class="d-flex align-items-center gap-2">
-    <button type="button" class="btn btn-outline-light btn-sm py-1 px-2" onclick="goBackIngress()" title="Go Back">
-      ⬅️ Back
-    </button>
-    <a class="text-white text-decoration-none fw-bold" href="{% url 'admin-dashboard' %}">
+<nav id="top-state-navbar" class="navbar navbar-dark state-navbar rounded-3 shadow-sm px-2 py-1 mb-2">
+  <div class="container-fluid px-1 d-flex justify-content-between align-items-center gap-1">
+    <a href="{% url 'admin-dashboard' %}" class="navbar-brand mb-0 fw-bold text-white text-decoration-none" style="font-size: 0.95rem;">
       🧠 AutoMAutist
     </a>
-  </div>
 
-  <div class="d-flex flex-wrap align-items-center gap-1">
-    <a href="{% url 'admin-dashboard' %}"
-       class="btn btn-sm py-1 px-2 {% if request.resolver_match.url_name == 'admin-dashboard' %}btn-primary fw-bold{% else %}btn-outline-light{% endif %}">
-      ⚙️ Domotica
-    </a>
+    <div class="d-flex align-items-center gap-1">
+      <a href="{% url 'admin-dashboard' %}"
+         class="btn py-1 px-2 {% if request.resolver_match.url_name == 'admin-dashboard' %}btn-light text-dark fw-bold btn-sm{% else %}btn-outline-light border-0{% endif %}"
+         style="{% if request.resolver_match.url_name != 'admin-dashboard' %}font-size: 0.78rem;{% endif %}">
+        {% if request.resolver_match.url_name == 'admin-dashboard' %}🏠 Dashboard{% else %}Dashboard{% endif %}
+      </a>
 
-    <a href="{% url 'mood-monitor' %}"
-       class="btn btn-sm py-1 px-2 {% if request.resolver_match.url_name == 'mood-monitor' or request.resolver_match.url_name == 'mood-monitor-no-slash' %}btn-primary fw-bold{% else %}btn-outline-light{% endif %}">
-      📊 Clinical Log
-    </a>
+      <a href="{% url 'domotica-dashboard' %}"
+         class="btn py-1 px-2 {% if request.resolver_match.url_name == 'domotica-dashboard' or request.resolver_match.url_name == 'domotica-dashboard-no-slash' %}btn-light text-dark fw-bold btn-sm{% else %}btn-outline-light border-0{% endif %}"
+         style="{% if request.resolver_match.url_name != 'domotica-dashboard' and request.resolver_match.url_name != 'domotica-dashboard-no-slash' %}font-size: 0.78rem;{% endif %}">
+        {% if request.resolver_match.url_name == 'domotica-dashboard' or request.resolver_match.url_name == 'domotica-dashboard-no-slash' %}⚙ Domotica{% else %}Domotica{% endif %}
+      </a>
 
-    <a href="{% url 'assist-card' %}"
-       class="btn btn-sm py-1 px-2 {% if request.resolver_match.url_name == 'assist-card' or request.resolver_match.url_name == 'assist-card-no-slash' %}btn-danger fw-bold{% else %}btn-outline-danger text-white{% endif %}">
-      🚨 Assist Card
-    </a>
+      <a href="{% url 'mood-monitor' %}"
+         class="btn py-1 px-2 {% if request.resolver_match.url_name == 'mood-monitor' or request.resolver_match.url_name == 'mood-monitor-no-slash' %}btn-light text-dark fw-bold btn-sm{% else %}btn-outline-light border-0{% endif %}"
+         style="{% if request.resolver_match.url_name != 'mood-monitor' and request.resolver_match.url_name != 'mood-monitor-no-slash' %}font-size: 0.78rem;{% endif %}">
+        {% if request.resolver_match.url_name == 'mood-monitor' or request.resolver_match.url_name == 'mood-monitor-no-slash' %}📊 Diary{% else %}Diary{% endif %}
+      </a>
+
+      <a href="{% url 'assist-card' %}"
+         class="btn py-1 px-2 {% if request.resolver_match.url_name == 'assist-card' or request.resolver_match.url_name == 'assist-card-no-slash' %}btn-light text-danger fw-bold btn-sm{% else %}btn-outline-light border-0{% endif %}"
+         style="{% if request.resolver_match.url_name != 'assist-card' and request.resolver_match.url_name != 'assist-card-no-slash' %}font-size: 0.78rem;{% endif %}">
+        {% if request.resolver_match.url_name == 'assist-card' or request.resolver_match.url_name == 'assist-card-no-slash' %}🚨 Assist{% else %}Assist{% endif %}
+      </a>
+    </div>
   </div>
 </nav>
-
-<script>
-  function goBackIngress() {
-    if (window.history.length > 1 && document.referrer && document.referrer.includes(window.location.host)) {
-      window.history.back();
-    } else {
-      window.location.href = "{% url 'admin-dashboard' %}";
-    }
-  }
-</script>
